@@ -1,4 +1,4 @@
-package hz.red5rmtp;
+package hz.rtmpflv;
 
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
@@ -7,11 +7,12 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import hz.flv.FlvPacker;
-import hz.flv.Packer;
+import hz.LiveView;
+import hz.flv.Flv;
 
 /**
  * Created by Administrator on 2018-04-04.
@@ -22,9 +23,7 @@ public class HardEncode {
     private MediaCodec mMediaCodec;
     private int mEncodeWidth;
     private int mEncodeHeight;
-    private FlvPacker mFlvPacker;
     private ExecutorService mSingleThreadExecutor = Executors.newSingleThreadExecutor();
-
 
     public void initVideoEncode(int w, int h) {
         try {
@@ -34,25 +33,10 @@ public class HardEncode {
             mEncodeWidth = w;
             mEncodeHeight = h;
 
-            mFlvPacker = new FlvPacker();
-            mFlvPacker.initVideoParams(mEncodeWidth, mEncodeHeight, 15);
-            mFlvPacker.setPacketListener(new Packer.OnPacketListener() {
-                @Override
-                public void onPacket(final byte[] data, int packetType) {
-                    mSingleThreadExecutor.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            LiveRtmp.getInstance().push(data, data.length);
-                        }
-                    });
-                }
-            });
-            mFlvPacker.start();
-
             mSingleThreadExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    int ret = LiveRtmp.getInstance().connect("rtmp://192.168.10.136:5051/live/demo");
+                    int ret = LiveRtmp.getInstance().connect("rtmp://192.168.10.8/live/aaa");
                     Log.d("zhx", "LiveRtmp: " + ret);
                 }
             });
@@ -61,9 +45,15 @@ public class HardEncode {
             MediaFormat mediaFormat = MediaFormat.createVideoFormat(VIDEO_MIME, w, h);
             mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, BIT_RATE);
             mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, FRAME_RATE);
-            mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible);
-            mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1);
-            mMediaCodec.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
+            mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar);
+            mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 5);
+//            {color-format=21, i-frame-interval=1, mime=video/avc, width=352, bitrate-mode=2, bitrate=400000, frame-rate=15, height=640}
+//            {color-format=2134288520, i-frame-interval=5, mime=video/avc, width=320, bitrate=125000, frame-rate=15, height=240}
+            try {
+                mMediaCodec.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
+            } catch (Exception e) {
+                Log.d("zhx", "initVideoEncode: ");
+            }
             mMediaCodec.start();
         } catch (IOException e) {
             e.printStackTrace();
@@ -71,14 +61,13 @@ public class HardEncode {
     }
 
     public void encodeYUV(byte[] buf) {
-        int LENGTH = mEncodeWidth * mEncodeHeight;
+        /*int LENGTH = mEncodeWidth * mEncodeHeight;
         //YV12数据转化成COLOR_FormatYUV420Planar
         for (int i = LENGTH; i < (LENGTH + LENGTH / 4); i++) {
             byte temp = buf[i];
             buf[i] = buf[i + LENGTH / 4];
             buf[i + LENGTH / 4] = temp;
-        }
-
+        }*/
         ByteBuffer[] inputBuffers = mMediaCodec.getInputBuffers();
         ByteBuffer[] outputBuffers = mMediaCodec.getOutputBuffers();
         try {
@@ -86,15 +75,35 @@ public class HardEncode {
             if (bufferIndex >= 0) {
                 ByteBuffer inputBuffer = inputBuffers[bufferIndex];
                 inputBuffer.clear();
-                inputBuffer.put(buf, 0, buf.length);
+                inputBuffer.put(buf);
                 mMediaCodec.queueInputBuffer(bufferIndex, 0, inputBuffers[bufferIndex].position(), System.nanoTime() / 1000, 0);
 
                 MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
                 int outputBufferIndex = mMediaCodec.dequeueOutputBuffer(bufferInfo, 0);
                 while (outputBufferIndex >= 0) {
                     ByteBuffer outputBuffer = outputBuffers[outputBufferIndex];
-                    // TODO push
-                    mFlvPacker.onVideoData(outputBuffer, bufferInfo);
+
+//                    mFlv.findNals(outputBuffer, bufferInfo);
+                    int type = 0;
+                    // 去H264头
+                    for (int i = 0; i < 4; i ++) {
+                        outputBuffer.get();
+                    }
+
+                    ByteBuffer frame = outputBuffer.slice();
+
+                    type = frame.get(0) & 0x0f;
+
+                    if (type == 7) {
+                        Log.d("zhx", "encodeYUV: SPS" + bufferInfo.size);
+                        LiveRtmp.getInstance().sendSpsPps(frame, bufferInfo);
+                    } else if (type == 5) {
+                        Log.d("zhx", "encodeYUV: I" + bufferInfo.size);
+                        LiveRtmp.getInstance().sendVideoTag(true, frame, bufferInfo);
+                    } else {
+                        LiveRtmp.getInstance().sendVideoTag(false, frame, bufferInfo);
+                    }
+
                     mMediaCodec.releaseOutputBuffer(outputBufferIndex, false);
                     outputBufferIndex = mMediaCodec.dequeueOutputBuffer(bufferInfo, 0);
                 }

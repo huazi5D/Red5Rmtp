@@ -1,4 +1,4 @@
-package hz.red5rmtp;
+package hz.rtmpflv;
 
 import org.junit.Test;
 

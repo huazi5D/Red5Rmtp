@@ -1,4 +1,4 @@
-package hz.red5rmtp;
+package hz.rtmpflv;
 
 import android.graphics.ImageFormat;
 import android.hardware.Camera;
@@ -21,16 +21,15 @@ public class LiveCamera implements Camera.PreviewCallback{
     public LiveCamera() {
         mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
         Camera.Parameters parameters = mCamera.getParameters();
-        parameters.setPictureFormat(ImageFormat.YV12);
-        parameters.setPictureSize(mWidth, mHeight);
+        List<Camera.Size> sizes = parameters.getSupportedPictureSizes();
         parameters.setPreviewSize(mWidth, mHeight);
-        parameters.setPreviewFormat(ImageFormat.YV12);
+        parameters.setPreviewFormat(ImageFormat.NV21);
         List<String> focusModes = parameters.getSupportedFocusModes();
         if (focusModes.contains("continuous-video")) {
             parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
         }
         mCamera.setParameters(parameters);
-        mCamera.setDisplayOrientation(90);
+//        mCamera.setDisplayOrientation(90);
 
         mHardEncode = new HardEncode();
         mHardEncode.initVideoEncode(mWidth, mHeight);
