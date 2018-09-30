@@ -99,9 +99,9 @@ public class HardEncode {
                         LiveRtmp.getInstance().sendSpsPps(frame, bufferInfo);
                     } else if (type == 5) {
                         Log.d("zhx", "encodeYUV: I" + bufferInfo.size);
-                        LiveRtmp.getInstance().sendVideoTag(true, frame, bufferInfo);
+//                        LiveRtmp.getInstance().sendVideoTag(true, frame, bufferInfo);
                     } else {
-                        LiveRtmp.getInstance().sendVideoTag(false, frame, bufferInfo);
+//                        LiveRtmp.getInstance().sendVideoTag(false, frame, bufferInfo);
                     }
 
                     mMediaCodec.releaseOutputBuffer(outputBufferIndex, false);

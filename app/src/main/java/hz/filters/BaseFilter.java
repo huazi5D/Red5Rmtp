@@ -43,7 +43,7 @@ public class BaseFilter {
     }
 
     public void initFilter(int fboTextureId) {
-        initFilter(fboTextureId, RotationUtil.TEXTURE_ROTATED_180, true);
+        initFilter(fboTextureId, RotationUtil.TEXTURE_NO_ROTATION, false);
     }
 
     float[] rotate;
@@ -73,7 +73,7 @@ public class BaseFilter {
             RenderHelp.bindFBO(mFboTextureId);
         GLES20.glUseProgram(mProgram);
         GLES20.glVertexAttribPointer(aPosHandle, 2, GLES20.GL_FLOAT, false, 0, RenderHelp.getPosBuffer());
-        GLES20.glVertexAttribPointer(aCooHandle, 2, GLES20.GL_FLOAT, false, 0, RotationUtil.getRotation(rotate, flipHorizontal, false));
+        GLES20.glVertexAttribPointer(aCooHandle, 2, GLES20.GL_FLOAT, false, 0, RotationUtil.getRotation(rotate, false, false));
         if (mRunnable != null)
             mRunnable.run();
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
@@ -86,10 +86,10 @@ public class BaseFilter {
         }
     }
 
-    private Bitmap convertToBitmap(byte[] ia) {
+    protected Bitmap convertToBitmap(byte[] ia) {
         if (ia == null) return null;
-        int mWidth = 320;
-        int mHeight = 240;
+        int mWidth = 240;
+        int mHeight = 320;
         byte[] iat = new byte[mWidth * mHeight * 4];
         for (int i = 0; i < mHeight; i++) {
             System.arraycopy(ia, i * mWidth * 4, iat, (mHeight - i - 1) * mWidth * 4, mWidth * 4);

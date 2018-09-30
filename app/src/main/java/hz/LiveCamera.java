@@ -23,6 +23,7 @@ public class LiveCamera {
             parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
         }
         mCamera.setParameters(parameters);
+        mCamera.setDisplayOrientation(90);
     }
 
     public void setPreview(SurfaceTexture surfaceTexture) {

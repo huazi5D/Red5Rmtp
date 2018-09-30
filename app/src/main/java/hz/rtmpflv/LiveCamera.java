@@ -29,7 +29,7 @@ public class LiveCamera implements Camera.PreviewCallback{
             parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
         }
         mCamera.setParameters(parameters);
-//        mCamera.setDisplayOrientation(90);
+        mCamera.setDisplayOrientation(90);
 
         mHardEncode = new HardEncode();
         mHardEncode.initVideoEncode(mWidth, mHeight);

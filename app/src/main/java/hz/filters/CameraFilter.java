@@ -83,9 +83,10 @@ public class CameraFilter extends BaseFilter{
                     mGLByteByfferCache.poll();
                 }
                 mGLByteByfferCache.add(byteBuffer);
-                if (i == 0) {
-                    i ++;
-                    new Thread(new Runnable() {
+                i ++;
+                if (i == 100) {
+                    convertToBitmap(byteBuffer.array());
+                    /*new Thread(new Runnable() {
                         @Override
                         public void run() {
                             while (true) {
@@ -96,7 +97,7 @@ public class CameraFilter extends BaseFilter{
                                 }
                             }
                         }
-                    }).start();
+                    }).start();*/
                 }
                 liveView.requestRender();
             }
@@ -105,7 +106,7 @@ public class CameraFilter extends BaseFilter{
 
     @Override
     public void initFilter(int fbotextureId) {
-        super.initFilter(fbotextureId, RotationUtil.TEXTURE_ROTATED_90, true);
+        super.initFilter(fbotextureId, RotationUtil.TEXTURE_NO_ROTATION, false);
         mSurfaceTexture = new SurfaceTexture(RenderHelp.createOESTexture());
         mLiveCamera.setPreview(mSurfaceTexture);
     }

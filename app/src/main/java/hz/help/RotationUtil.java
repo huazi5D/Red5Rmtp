@@ -49,11 +49,12 @@ public class RotationUtil {
     };
 
     private RotationUtil() {
+
     }
 
     public static FloatBuffer getRotation(float[] rotatedTex, final boolean flipHorizontal,
                                                          final boolean flipVertical) {
-        if (flipHorizontal) {
+        /*if (flipHorizontal) {
             rotatedTex = new float[]{
                     flip(rotatedTex[0]), rotatedTex[1],
                     flip(rotatedTex[2]), rotatedTex[3],
@@ -68,7 +69,7 @@ public class RotationUtil {
                     rotatedTex[4], flip(rotatedTex[5]),
                     rotatedTex[6], flip(rotatedTex[7]),
             };
-        }
+        }*/
         FloatBuffer fb = ByteBuffer.allocateDirect(rotatedTex.length * 4)
                 .order(ByteOrder.nativeOrder())
                 .asFloatBuffer();

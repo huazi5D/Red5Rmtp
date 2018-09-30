@@ -26,11 +26,11 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Log.d("zhx", "onCreate: ");
-        /*mLiveView = findViewById(R.id.live_view);
+        mLiveView = findViewById(R.id.live_view);
         CameraFilter cameraFilter = new CameraFilter(mLiveView);
         mLiveView.setFilter(cameraFilter);
         ScreenFilter screenFilter = new ScreenFilter();
-        cameraFilter.setNextFilter(screenFilter);*/
+        cameraFilter.setNextFilter(screenFilter);
     }
 
 }
